@@ -151,7 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="server.cpp" />
+    <ClCompile Include="start.cc" />
     <ClCompile Include="Server.cc" />
     <ClCompile Include="TaskPool.cc" />
   </ItemGroup>
