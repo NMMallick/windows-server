@@ -12,6 +12,7 @@
 #include "TaskPool.hh"
 
 #pragma comment (lib, "Ws2_32.lib")
+#define DEFAULT_BUFLEN 512
 
 class Server
 {
@@ -130,6 +131,36 @@ void Server::AcceptConnections()
 
 void Server::CheckClients()
 {
+	while (!done_)
+	{
+		for (size_t i = 0; i < client_sockets_.size(); i++)
+		{
+			/*server_threads_.launch([&]() {*/
+				
+				char recvbuf[DEFAULT_BUFLEN];
+				printf("checking for message on client id %d\n", i);
+				auto iResult = recv(client_sockets_[i], recvbuf, DEFAULT_BUFLEN, 0);
+
+				if (iResult > 0)
+				{
+					// Got a message 
+					printf("Bytes recieved: %d", iResult);
+				}
+				else if (iResult == 0)
+				{
+					printf("closing connection\n");
+					closesocket(client_sockets_[i]);
+					client_sockets_.erase(client_sockets_.begin() + i);
+				}
+				else
+				{
+					printf("recv failed with error: %d\n", WSAGetLastError());
+					closesocket(client_sockets_[i]);
+					client_sockets_.erase(client_sockets_.begin() + i);
+				}
+			//});
+		}
+	}
 
 }
 

@@ -19,8 +19,7 @@ int __cdecl main(void)
 {
 	Server server(DEFAULT_PORT);
 	server.AcceptConnections();
-
-	while (true);
+	server.CheckClients();
 	//WSADATA wsaData;
 	//int iResult;
 
