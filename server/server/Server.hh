@@ -14,13 +14,20 @@
 #pragma comment (lib, "Ws2_32.lib")
 #define DEFAULT_BUFLEN 512
 
+struct client_
+{
+	SOCKET s;
+	int buflen = DEFAULT_BUFLEN; 
+	char buf[DEFAULT_BUFLEN];
+};
+
 class Server
 {
 private:
 	WSADATA wsaData;
 	SOCKET ListenSocket;
 
-	std::vector<SOCKET> client_sockets_;
+	std::vector<client_> client_sockets_;
 	TaskPool server_threads_;
 
 	struct addrinfo *result = NULL;
@@ -99,6 +106,7 @@ Server::Server(const std::string &PORT_ADDR = "4000")
 
 void Server::AcceptConnections()
 {
+	unsigned long ul = 1; 
 	server_threads_.launch([&]() {
 		while (!this->done_)
 		{
@@ -120,8 +128,13 @@ void Server::AcceptConnections()
 				WSACleanup();
 				exit(1);
 			}
-			this->client_sockets_.push_back(ClientSocket);
-			printf("accepted client (%d)\n", this->client_sockets_.size());
+
+			ioctlsocket(ClientSocket, FIONBIO, (unsigned long*) &ul);
+			client_ c;
+			c.s = ClientSocket;
+			this->client_sockets_.push_back(c);
+
+			printf("accepted client (id=%d)\n", this->client_sockets_.size()-1);
 		}
 		 
 		closesocket(this->ListenSocket);
@@ -135,30 +148,40 @@ void Server::CheckClients()
 	{
 		for (size_t i = 0; i < client_sockets_.size(); i++)
 		{
-			/*server_threads_.launch([&]() {*/
-				
-				char recvbuf[DEFAULT_BUFLEN];
-				printf("checking for message on client id %d\n", i);
-				auto iResult = recv(client_sockets_[i], recvbuf, DEFAULT_BUFLEN, 0);
+			//char recvbuf[DEFAULT_BUFLEN];			
+			auto iResult = recv(client_sockets_[i].s, client_sockets_[i].buf, DEFAULT_BUFLEN, 0);
 
-				if (iResult > 0)
-				{
-					// Got a message 
-					printf("Bytes recieved: %d", iResult);
-				}
-				else if (iResult == 0)
-				{
-					printf("closing connection\n");
-					closesocket(client_sockets_[i]);
-					client_sockets_.erase(client_sockets_.begin() + i);
-				}
-				else
-				{
-					printf("recv failed with error: %d\n", WSAGetLastError());
-					closesocket(client_sockets_[i]);
-					client_sockets_.erase(client_sockets_.begin() + i);
-				}
-			//});
+			if (iResult > 0)
+			{
+				// Got a message 
+				client_sockets_[i].buflen = iResult;
+				server_threads_.launch([&, i]() {
+					printf("Bytes received from client(%d) : %d\n", i, client_sockets_[i].buflen);
+					
+					for (size_t j = 0; j < client_sockets_[i].buflen; j++)
+					{
+						printf("%c\n", client_sockets_[i].buf[j]);
+					}
+					});
+				continue;
+			}
+			else if (iResult == 0)
+			{
+				printf("closing connection\n");
+				closesocket(client_sockets_[i].s);
+				client_sockets_.erase(client_sockets_.begin() + i);
+				continue;
+			}
+
+			if (iResult < 0 && WSAGetLastError() == WSAEWOULDBLOCK)
+				continue;
+				//printf("coming back later to client %d\n", i);
+			else
+			{
+				printf("recv failed with error: %d\n", WSAGetLastError());
+				closesocket(client_sockets_[i].s);
+				client_sockets_.erase(client_sockets_.begin() + i);
+			}
 		}
 	}
 
@@ -171,8 +194,8 @@ void Server::ShutDown()
 	server_threads_.stop();
 
 	printf("closing socket connections\n");
-	for (auto sock : client_sockets_)
-		closesocket(sock);
+	for (auto c : client_sockets_)
+		closesocket(c.s);
 	
 	client_sockets_.clear();
 
