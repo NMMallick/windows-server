@@ -28,6 +28,8 @@ private:
 	SOCKET ListenSocket;
 
 	std::vector<client_> client_sockets_;
+	std::mutex socket_mutex_;
+
 	TaskPool server_threads_;
 
 	struct addrinfo *result = NULL;
@@ -106,10 +108,10 @@ Server::Server(const std::string &PORT_ADDR = "4000")
 
 void Server::AcceptConnections()
 {
-	unsigned long ul = 1; 
 	server_threads_.launch([&]() {
-		while (!this->done_)
+		while (!done_)
 		{
+			client_ c;
 			printf("waiting for connections...\n");
 			auto iResult = listen(this->ListenSocket, SOMAXCONN);
 			if (iResult == SOCKET_ERROR)
@@ -120,8 +122,8 @@ void Server::AcceptConnections()
 				exit(1);
 			}
 
-			auto ClientSocket = accept(this->ListenSocket, NULL, NULL);
-			if (ClientSocket == INVALID_SOCKET)
+			c.s = accept(this->ListenSocket, NULL, NULL);
+			if (c.s == INVALID_SOCKET)
 			{
 				printf("accept failed with error: %d\n", WSAGetLastError());
 				closesocket(this->ListenSocket);
@@ -129,10 +131,9 @@ void Server::AcceptConnections()
 				exit(1);
 			}
 
-			ioctlsocket(ClientSocket, FIONBIO, (unsigned long*) &ul);
-			client_ c;
-			c.s = ClientSocket;
-			this->client_sockets_.push_back(c);
+			//this->client_sockets_.push_back(c);
+			std::unique_lock<std::mutex> lock(socket_mutex_);
+			client_sockets_.push_back(c);
 
 			printf("accepted client (id=%d)\n", this->client_sockets_.size()-1);
 		}
@@ -144,24 +145,36 @@ void Server::AcceptConnections()
 
 void Server::CheckClients()
 {
+	unsigned long ul = 1;
+
 	while (!done_)
 	{
+		std::unique_lock<std::mutex> lock(socket_mutex_);
 		for (size_t i = 0; i < client_sockets_.size(); i++)
 		{
-			//char recvbuf[DEFAULT_BUFLEN];			
+			ioctlsocket(client_sockets_[i].s, FIONBIO, &ul);
 			auto iResult = recv(client_sockets_[i].s, client_sockets_[i].buf, DEFAULT_BUFLEN, 0);
-
-			if (iResult > 0)
+		
+			if (iResult > 0) // Got a message 
 			{
-				// Got a message 
+				// Record the byte size of data that's in the queue
 				client_sockets_[i].buflen = iResult;
+
+				// Have a thread deal with recieving that data 
 				server_threads_.launch([&, i]() {
-					printf("Bytes received from client(%d) : %d\n", i, client_sockets_[i].buflen);
-					
+					std::unique_lock<std::mutex> lock(socket_mutex_);
+				
+					// Handle message
+
+					// DEBUG
+					printf("Bytes received from client(%d) : %d\n", i, client_sockets_[i].buflen);				
+					printf("(CHAR OUTPUT)\t");
 					for (size_t j = 0; j < client_sockets_[i].buflen; j++)
 					{
-						printf("%c\n", client_sockets_[i].buf[j]);
+						printf("%c", client_sockets_[i].buf[j]);
 					}
+					printf("\n");
+
 					});
 				continue;
 			}
@@ -175,7 +188,6 @@ void Server::CheckClients()
 
 			if (iResult < 0 && WSAGetLastError() == WSAEWOULDBLOCK)
 				continue;
-				//printf("coming back later to client %d\n", i);
 			else
 			{
 				printf("recv failed with error: %d\n", WSAGetLastError());
@@ -194,8 +206,8 @@ void Server::ShutDown()
 	server_threads_.stop();
 
 	printf("closing socket connections\n");
-	for (auto c : client_sockets_)
-		closesocket(c.s);
+	for (size_t i = 0; i < client_sockets_.size(); i++)
+		closesocket(client_sockets_[i].s);
 	
 	client_sockets_.clear();
 

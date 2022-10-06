@@ -4,7 +4,6 @@
 void TaskPool::start() {
 	const uint32_t num_threads = std::thread::hardware_concurrency(); // Max # of threads the system supports
 	threads.resize(num_threads);
-	//std::cout << "initiating " << threads.size() << " threads" << std::endl;
 	printf("initiating %d threads\n", threads.size());
 
 	for (uint32_t i = 0; i < num_threads; i++)
