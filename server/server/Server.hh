@@ -19,6 +19,7 @@ struct client_
 	SOCKET s;
 	int buflen = DEFAULT_BUFLEN; 
 	char buf[DEFAULT_BUFLEN];
+	bool busy; 
 };
 
 class Server
@@ -132,6 +133,7 @@ void Server::AcceptConnections()
 			}
 
 			//this->client_sockets_.push_back(c);
+			c.busy = false; 
 			std::unique_lock<std::mutex> lock(socket_mutex_);
 			client_sockets_.push_back(c);
 
@@ -152,30 +154,45 @@ void Server::CheckClients()
 		std::unique_lock<std::mutex> lock(socket_mutex_);
 		for (size_t i = 0; i < client_sockets_.size(); i++)
 		{
+			if (client_sockets_[i].busy)
+				continue;
+
 			ioctlsocket(client_sockets_[i].s, FIONBIO, &ul);
 			auto iResult = recv(client_sockets_[i].s, client_sockets_[i].buf, DEFAULT_BUFLEN, 0);
 		
 			if (iResult > 0) // Got a message 
 			{
 				// Record the byte size of data that's in the queue
+				client_sockets_[i].busy = true;
 				client_sockets_[i].buflen = iResult;
 
 				// Have a thread deal with recieving that data 
 				server_threads_.launch([&, i]() {
-					std::unique_lock<std::mutex> lock(socket_mutex_);
+						std::unique_lock<std::mutex> lock(socket_mutex_);
 				
-					// Handle message
+						printf("Bytes received from client(%d) : %d\n", i, client_sockets_[i].buflen);
+						printf("(CHAR OUTPUT)\t");
+						for (size_t j = 0; j < client_sockets_[i].buflen; j++)
+						{
+							printf("%c", client_sockets_[i].buf[j]);
+						}
+						printf("\n");
+						if (client_sockets_[i].buf[0] == 0x00)
+							printf("Node is publishing host name of:\t");
 
-					// DEBUG
-					printf("Bytes received from client(%d) : %d\n", i, client_sockets_[i].buflen);				
-					printf("(CHAR OUTPUT)\t");
-					for (size_t j = 0; j < client_sockets_[i].buflen; j++)
-					{
-						printf("%c", client_sockets_[i].buf[j]);
-					}
-					printf("\n");
+						for (size_t k = 1; k <= 4; ++k)
+						{
+							if (k != 4) printf("%d.", client_sockets_[i].buf[k]);
+							else printf("%d", client_sockets_[i].buf[k]);
+						}
 
+						printf("\n");
+
+						uint16_t port_num = (client_sockets_[i].buf[5] << 8) + client_sockets_[i].buf[6];
+						printf("At port number: %u\n", port_num);
+						
 					});
+				
 				continue;
 			}
 			else if (iResult == 0)
@@ -190,7 +207,7 @@ void Server::CheckClients()
 				continue;
 			else
 			{
-				printf("recv failed with error: %d\n", WSAGetLastError());
+				printf("recv failed with error: %u\n", WSAGetLastError());
 				closesocket(client_sockets_[i].s);
 				client_sockets_.erase(client_sockets_.begin() + i);
 			}
