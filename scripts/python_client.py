@@ -35,17 +35,17 @@ class publisher:
         print(self.__MY_URI__)
 
     def __setup__(self, HOST, PORT):
-        
+
         msg = bytearray(b'\00')
-        
-        ## Add HOST addr to the message 
+
+        ## Add HOST addr to the message
         for ip_field in self.__MY_URI__['HOST'].split('.'):
             msg.extend(int(ip_field).to_bytes(1, 'big'))
 
         ## Add PORT addr to the message
         msg.extend(self.__MY_URI__['PORT'].to_bytes(2, 'big'))
         print(msg)
-        
+
         self.__master_sock__ = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             self.__master_sock__.connect((HOST, PORT))

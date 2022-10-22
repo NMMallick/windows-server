@@ -2,48 +2,19 @@ import math
 import struct
 import os
 import struct
-import math 
-
-datatypes = {
-    ## Character ##
-    "character" :{
-        "bytes" : 1,
-        "format" : 'c'
-    },
-    ## Double ##
-    "double" : {
-        "bytes" : 8,
-        "format" : 'd'
-    },
-    ## Float ##
-    "float" : {
-        "bytes" : 4,
-        "format" : 'f'
-    },
-    ## Boolean ##
-    "bool" : {
-        "byte" : 1,
-        "format" : '?'
-    },
-    ## Integer ##
-    "integer" : {
-        "byte" : 4,
-        "format" : 'i'
-    }
-}
+import math
 
 def generateClassHeader(file, name):
     file.write(f'class {name}:\n')
     file.write(f'\tdef __init__(self):\n')
-    
+
 def generateClassVariables(file, vars):
     file.write(f"\t\tself.__serial_data__ = None\n")
     for var in vars:
         if '[]' not in var[0]:
             file.write(f"\t\tself.{var[1]} = None\n")
-        else: 
+        else:
             file.write(f"\t\tself.{var[1]} = []\n")
-    
 
 def generateSerializeFunc():
     pass
@@ -52,14 +23,14 @@ def generateDeserializeFunc():
     pass
 
 def getVars(moduleName):
-    
+
     contents = os.listdir('.')
     msg_dir = 'msgs'
     msg_files = os.listdir(f'./{msg_dir}/') if msg_dir in contents else None
 
     if msg_files != None:
         for msg_file in msg_files:
-            
+
             if '.msg' not in msg_file:
                 continue
 
@@ -67,7 +38,7 @@ def getVars(moduleName):
             f = open(f'./{msg_dir}/{msg_file}')
             vars = []
             for line in f:
-                ## Remove any newline characters 
+                ## Remove any newline characters
                 line = line.replace('\n', '')
 
                 ## Split the line in variable type | variable name
@@ -85,14 +56,9 @@ def getVars(moduleName):
                 generateClassHeader(file, msg_file.split('.msg')[0])
                 generateClassVariables(file, vars)
                 file.close()
-                
-                
-
-
 
 if __name__ == '__main__':
-    
+
     getVars('wayside_controller')
-    
-    
-    
+
+
