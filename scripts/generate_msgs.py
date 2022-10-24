@@ -4,23 +4,41 @@ import os
 import struct
 import math
 
+
+def generateImports(file):
+    file.write(f'from msg import msg\n\n')
+
 def generateClassHeader(file, name):
-    file.write(f'class {name}:\n')
+    file.write(f'class {name}(msg):\n')
     file.write(f'\tdef __init__(self):\n')
+    file.write(f'\t\tsuper().__init__()\n')
+    file.write(f'\t\tself.__vars__ = []\n')
 
 def generateClassVariables(file, vars):
-    file.write(f"\t\tself.__serial_data__ = None\n")
     for var in vars:
         if '[]' not in var[0]:
             file.write(f"\t\tself.{var[1]} = None\n")
         else:
             file.write(f"\t\tself.{var[1]} = []\n")
+        file.write(f'\t\tself.__vars__.append(self.{var[1]})\n')
 
-def generateSerializeFunc():
-    pass
+    for var in vars:
+        file.write(f'\t\tself.__data_types__.append("{var[0]}")\n')
+    file.write('\n\n')
 
-def generateDeserializeFunc():
-    pass
+def generateSerializeFunc(file, vars):
+    file.write('\tdef serialize(self):\n')
+    for i, var in enumerate(vars):
+        file.write(f'\t\tself.__vars__[{i}] = self.{var[1]}\n')
+    file.write('\t\treturn self.__serialize__(self.__vars__)\n\n')
+
+def generateDeserializeFunc(file, vars):
+    file.write('\tdef deserialize(self, buffer):\n')
+    file.write('\t\tself.__deserialize__(buffer, self.__vars__)\n')
+    
+    for i, var in enumerate(vars):
+        file.write(f'\t\tself.{var[1]} = self.__vars[{i}]\n')
+
 
 def getVars(moduleName):
 
@@ -53,8 +71,11 @@ def getVars(moduleName):
             ## Generate the file and create the class header
             if len(vars) > 0:
                 file = open(f"{moduleName}.py", 'w')
+                generateImports(file)
                 generateClassHeader(file, msg_file.split('.msg')[0])
                 generateClassVariables(file, vars)
+                generateSerializeFunc(file, vars)
+                generateDeserializeFunc(file, vars)
                 file.close()
 
 if __name__ == '__main__':

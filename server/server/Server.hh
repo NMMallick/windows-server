@@ -18,7 +18,8 @@ struct client_
 {
 	SOCKET s;
 	int buflen = DEFAULT_BUFLEN; 
-	char buf[DEFAULT_BUFLEN];
+	char recvbuf[DEFAULT_BUFLEN];
+	char* sendbuf;
 	bool busy; 
 };
 
@@ -70,9 +71,11 @@ Server::Server(const std::string &PORT_ADDR = "4000")
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 	hints.ai_flags = AI_PASSIVE;
+	
+	std::string HOST = "0.0.0.0";
 
 	// Resolve the server address and port
-	iResult = getaddrinfo(NULL, PORT_ADDR.c_str(), &hints, &result);
+	iResult = getaddrinfo(HOST.c_str(), PORT_ADDR.c_str(), &hints, &result);
 	if (iResult != 0)
 	{
 		printf("getaddrinfo failed with error: %d\n", iResult);
@@ -157,9 +160,10 @@ void Server::CheckClients()
 			if (client_sockets_[i].busy)
 				continue;
 
+
 			ioctlsocket(client_sockets_[i].s, FIONBIO, &ul);
-			auto iResult = recv(client_sockets_[i].s, client_sockets_[i].buf, DEFAULT_BUFLEN, 0);
-		
+			auto iResult = recv(client_sockets_[i].s, client_sockets_[i].recvbuf, DEFAULT_BUFLEN, 0);
+			
 			if (iResult > 0) // Got a message 
 			{
 				// Record the byte size of data that's in the queue
@@ -171,29 +175,48 @@ void Server::CheckClients()
 						std::unique_lock<std::mutex> lock(socket_mutex_);
 				
 						printf("Bytes received from client(%d) : %d\n", i, client_sockets_[i].buflen);
-						printf("(CHAR OUTPUT)\t");
+						/*printf("(CHAR OUTPUT)\t");
 						for (size_t j = 0; j < client_sockets_[i].buflen; j++)
 						{
-							printf("%c", client_sockets_[i].buf[j]);
-						}
-						printf("\n");
-						if (client_sockets_[i].buf[0] == 0x00)
+							printf("%c", client_sockets_[i].recvbuf[j]);
+						}*/
+						//printf("\n");
+						
+						// Register Publisher
+						if (client_sockets_[i].recvbuf[0] == 0x00)
 							printf("Node is publishing host name of:\t");
+
+						// Register subscriber
+
+						// Close connection
+						/*if (client_sockets_[i].recvbuf[0] == 0x03)
+						{
+							printf("closing connection\n");
+							closesocket(client_sockets_[i].s);
+							client_sockets_.erase(client_sockets_.begin() + i);
+							return;
+						}*/
 
 						for (size_t k = 1; k <= 4; ++k)
 						{
-							if (k != 4) printf("%d.", client_sockets_[i].buf[k]);
-							else printf("%d", client_sockets_[i].buf[k]);
+							if (k != 4) printf("%d.", client_sockets_[i].recvbuf[k]);
+							else printf("%d", client_sockets_[i].recvbuf[k]);
 						}
 
 						printf("\n");
 
-						uint16_t port_num = (client_sockets_[i].buf[5] << 8) + client_sockets_[i].buf[6];
+						uint16_t port_num = (client_sockets_[i].recvbuf[5] << 8) + client_sockets_[i].recvbuf[6];
 						printf("At port number: %u\n", port_num);
-						
+
+						client_sockets_[i].busy = false; 
+						return;
+						//char buf[1] = {0};
+						//client_sockets_[i].sendbuf = buf;
+						//send(client_sockets_[i].s, client_sockets_[i].sendbuf, 1, 0);
 					});
 				
 				continue;
+				printf("hello?");
 			}
 			else if (iResult == 0)
 			{
