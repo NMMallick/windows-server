@@ -23,6 +23,6 @@ class wayside(msg):
 
 	def deserialize(self, buffer):
 		self.__deserialize__(buffer, self.__vars__)
-		self.my_str = self.__vars[0]
-		self.my_int = self.__vars[1]
-		self.my_bools = self.__vars[2]
+		self.my_str = self.__vars__[0]
+		self.my_int = self.__vars__[1]
+		self.my_bools = self.__vars__[2]

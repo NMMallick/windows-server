@@ -175,28 +175,13 @@ void Server::CheckClients()
 						std::unique_lock<std::mutex> lock(socket_mutex_);
 				
 						printf("Bytes received from client(%d) : %d\n", i, client_sockets_[i].buflen);
-						/*printf("(CHAR OUTPUT)\t");
-						for (size_t j = 0; j < client_sockets_[i].buflen; j++)
-						{
-							printf("%c", client_sockets_[i].recvbuf[j]);
-						}*/
-						//printf("\n");
 						
 						// Register Publisher
 						if (client_sockets_[i].recvbuf[0] == 0x00)
 							printf("Node is publishing host name of:\t");
 
 						// Register subscriber
-
-						// Close connection
-						/*if (client_sockets_[i].recvbuf[0] == 0x03)
-						{
-							printf("closing connection\n");
-							closesocket(client_sockets_[i].s);
-							client_sockets_.erase(client_sockets_.begin() + i);
-							return;
-						}*/
-
+				
 						for (size_t k = 1; k <= 4; ++k)
 						{
 							if (k != 4) printf("%d.", client_sockets_[i].recvbuf[k]);

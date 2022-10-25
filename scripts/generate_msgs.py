@@ -37,7 +37,7 @@ def generateDeserializeFunc(file, vars):
     file.write('\t\tself.__deserialize__(buffer, self.__vars__)\n')
     
     for i, var in enumerate(vars):
-        file.write(f'\t\tself.{var[1]} = self.__vars[{i}]\n')
+        file.write(f'\t\tself.{var[1]} = self.__vars__[{i}]\n')
 
 
 def getVars(moduleName):
