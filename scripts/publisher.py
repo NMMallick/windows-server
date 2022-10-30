@@ -105,9 +105,8 @@ class publisher:
                 with self.__clients__[s]['lock']:
                     if len(self.__clients__[s]['queue']) > 0:
                         msg = self.__clients__[s]['queue'].pop(0)
-                        print("sending message")
                         try:
-                            print(s.send(msg))
+                            s.send(msg)
                         except:
                             print("Lost connection to client")
 

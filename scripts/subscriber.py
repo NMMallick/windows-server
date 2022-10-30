@@ -188,6 +188,9 @@ class subscriber:
 
 
     def __get_addr__(self, res):
+        
+        if len(res) != 6:
+            return
 
         ## Extract the host name and port address
         host = str(res[0]) + '.' + str(res[1]) + '.' + str(res[2]) + '.' + str(res[3])
@@ -196,23 +199,19 @@ class subscriber:
         return (host, port)
 
     def __serialize_request__(self, topic):
+        
         msg = bytearray(__SUB__)
-
         topic_len = len(topic)
-
         msg += topic_len.to_bytes(1, 'big')
         msg += topic.encode('utf-8')
 
         return msg
 
-
 ## Test callback
 def test(msg):
     print(msg.my_str)
 
-
 if __name__ == '__main__':
-
 
     s = subscriber('/scan', wayside, test, 1)
     s.__setup__('127.0.0.1', 27015)
