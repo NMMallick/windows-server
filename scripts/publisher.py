@@ -24,6 +24,8 @@ class publisher:
             'PORT': self.__pub_sock__.getsockname()[1]
             }
 
+        print(f"publishing on address {self.__MY_URI__['HOST']}, {self.__MY_URI__['PORT']}")
+
         ## Connections and threading
         self.__done__ = False
         self.__connections__ = []
@@ -74,7 +76,7 @@ class publisher:
         while not self.__done__:
 
             ## Waiting for an event
-            readable, writable, exceptional = select.select(self.__inputs__, self.__outputs__, self.__outputs__)
+            readable, writable, exceptional = select.select(self.__inputs__, self.__outputs__, self.__outputs__, 0.001)
 
             for s in exceptional:
                 with self.__clients__[s]['lock']:
@@ -132,6 +134,9 @@ class publisher:
     def shutdown(self):
         print('shutting down')
         self.__done__ = True
+        
+        ## Wait for thread to finish up
+        self.__thr__.join()
 
         ## delete queues
         for i in self.__clients__:
@@ -139,10 +144,10 @@ class publisher:
 
         ## shutdown subscribed sockets
         for s in self.__outputs__:
+            print("closing socket")
+            s.shutdown(socket.SHUT_RDWR)
             s.close()
 
-        ## Wait for thread to finish up
-        self.__thr__.join()
 
         ## Shut down connection to the master server
         self.__master_sock__.close()

@@ -123,6 +123,10 @@ class msg:
         return self.__serialized_data__
 
     def __deserialize__(self, data, vars):
+
+        if len(data) == 0:
+            return
+            
         __message_length__ = struct.unpack('>i', data[0:4])[0]
         __stamped_message__ = data[4:]
 

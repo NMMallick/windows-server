@@ -14,7 +14,7 @@
 #include "TaskPool.hh"
 
 #pragma comment (lib, "Ws2_32.lib")
-#define DEFAULT_BUFLEN 512
+#define DEFAULT_BUFLEN 4096
 
 struct client_
 {
@@ -234,8 +234,8 @@ void Server::CheckClients()
 							{
 								if (k != 4) printf("%d.", client_sockets_[i].recvbuf[k]);
 								else printf("%u", client_sockets_[i].recvbuf[k]);
-								pub_uri[k-1] = client_sockets_[i].recvbuf[k];
-								hostname = (hostname << 8) | client_sockets_[i].recvbuf[k]; 
+								pub_uri[k - 1] = client_sockets_[i].recvbuf[k];
+								hostname = (hostname << 8) | client_sockets_[i].recvbuf[k];
 							}
 
 							pub_uri[4] = (client_sockets_[i].recvbuf[5] & 0xff);
@@ -245,37 +245,40 @@ void Server::CheckClients()
 							printf("\n");
 							uint16_t port_num = ((pub_uri[4] & 0xff) << 8) | (pub_uri[5] & 0xff);
 							printf("At port number: %d\n", port_num);
-							printf("byte 1: %u\nbyte 2: %u\n", pub_uri[4] & 0xff, pub_uri[5] &0xff);
-							
-							
+							printf("byte 1: %u\nbyte 2: %u\n", pub_uri[4] & 0xff, pub_uri[5] & 0xff);
+
+
 
 							uint8_t topic_len = client_sockets_[i].recvbuf[7];
 							std::string topic;
 
 							for (size_t k = 8; k < topic_len + 8; k++)
 								topic.push_back(client_sockets_[i].recvbuf[k]);
-							
+
 							// Register the route 
 							mapped_topics_[topic] = std::make_pair(hostname, port_num);
 
 							// Register as a publisher and save its topic 
-							client_sockets_[i].isPub = true; 
-							client_sockets_[i].topic = topic; 
+							client_sockets_[i].isPub = true;
+							client_sockets_[i].topic = topic;
 
 							printf("Topic: %s\n", topic.c_str());
 
 
 							// TODO send the URI data to subscribers 
-							for (const auto sock : client_sockets_)
+							for (auto sock : client_sockets_)
 							{
-								if (!sock.isPub)
+								if (sock.isPub)
 									continue;
-								
-								if (sock.busy)
-									continue;
+
+								/*if (sock.busy)
+									continue;*/
 
 								if (sock.topic == topic)
 								{
+									// Waiting for socket to become free
+									while (sock.busy);
+									printf("Sending data to the client\n");
 									send(sock.s, pub_uri, 6, 0);
 								}
 							}

@@ -1,6 +1,6 @@
 import signal
 import sys
-import publisher
+from publisher import publisher
 
 from time import sleep
 from tests.wayside_controller import wayside
