@@ -2,6 +2,8 @@
 
 #include <string>
 #include <vector>
+#include <map>
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -16,11 +18,13 @@
 
 struct client_
 {
-	SOCKET s;
+	SOCKET s = NULL;
 	int buflen = DEFAULT_BUFLEN; 
 	char recvbuf[DEFAULT_BUFLEN];
 	char* sendbuf;
-	bool busy; 
+	bool busy;
+	bool isPub;
+	std::string topic;
 };
 
 class Server
@@ -30,6 +34,8 @@ private:
 	SOCKET ListenSocket;
 
 	std::vector<client_> client_sockets_;
+	std::map<std::string, std::pair<uint32_t, uint16_t>> mapped_topics_;
+
 	std::mutex socket_mutex_;
 
 	TaskPool server_threads_;
@@ -176,35 +182,121 @@ void Server::CheckClients()
 				
 						printf("Bytes received from client(%d) : %d\n", i, client_sockets_[i].buflen);
 						
+						// Register subscriber
+						if (client_sockets_[i].recvbuf[0] == 0x01)
+						{
+							uint8_t topic_len = client_sockets_[i].recvbuf[1]; 
+							client_sockets_[i].isPub = false; 
+
+							// Extract topic from the buffer
+							std::string topic;
+							for (size_t k = 2; k < topic_len+2; k++)
+								topic.push_back(client_sockets_[i].recvbuf[k]);
+							
+							printf("Node requesting subscription to topic (%s)\n", topic.c_str());
+							client_sockets_[i].topic = topic;
+
+							// Send URI info to the client  
+							char pub_uri[6];
+
+							if (mapped_topics_.count(topic)) // If there exists a publisher 
+							{
+								// Port Number
+								pub_uri[5] = mapped_topics_[topic].second & 0xff; 
+								pub_uri[4] = (mapped_topics_[topic].second >> 8) & 0xff; 
+
+								// Host
+								pub_uri[3] = mapped_topics_[topic].first & 0x11; 
+								pub_uri[2] = (mapped_topics_[topic].first >> 8) & 0xff;
+								pub_uri[1] = (mapped_topics_[topic].first >> 16) & 0xff;
+								pub_uri[0] = (mapped_topics_[topic].first >> 24) & 0xff;							
+							}
+							else // Notify no active publisher 
+							{
+								for (size_t i = 0; i < 6; i++)
+								{
+									pub_uri[i] = 0x00; 
+								}
+							}
+
+							send(client_sockets_[i].s, pub_uri, 6, 0);
+							
+						}
+						
 						// Register Publisher
 						if (client_sockets_[i].recvbuf[0] == 0x00)
-							printf("Node is publishing host name of:\t");
-
-						// Register subscriber
-				
-						for (size_t k = 1; k <= 4; ++k)
 						{
-							if (k != 4) printf("%d.", client_sockets_[i].recvbuf[k]);
-							else printf("%d", client_sockets_[i].recvbuf[k]);
+							printf("Node is publishing with a host name of:\t");
+							uint32_t hostname = 0;
+							char pub_uri[6];
+
+							for (size_t k = 1; k <= 4; ++k)
+							{
+								if (k != 4) printf("%d.", client_sockets_[i].recvbuf[k]);
+								else printf("%u", client_sockets_[i].recvbuf[k]);
+								pub_uri[k-1] = client_sockets_[i].recvbuf[k];
+								hostname = (hostname << 8) | client_sockets_[i].recvbuf[k]; 
+							}
+
+							pub_uri[4] = (client_sockets_[i].recvbuf[5] & 0xff);
+							pub_uri[5] = (client_sockets_[i].recvbuf[6] & 0xff);
+
+							// Debugging
+							printf("\n");
+							uint16_t port_num = ((pub_uri[4] & 0xff) << 8) | (pub_uri[5] & 0xff);
+							printf("At port number: %d\n", port_num);
+							printf("byte 1: %u\nbyte 2: %u\n", pub_uri[4] & 0xff, pub_uri[5] &0xff);
+							
+							
+
+							uint8_t topic_len = client_sockets_[i].recvbuf[7];
+							std::string topic;
+
+							for (size_t k = 8; k < topic_len + 8; k++)
+								topic.push_back(client_sockets_[i].recvbuf[k]);
+							
+							// Register the route 
+							mapped_topics_[topic] = std::make_pair(hostname, port_num);
+
+							// Register as a publisher and save its topic 
+							client_sockets_[i].isPub = true; 
+							client_sockets_[i].topic = topic; 
+
+							printf("Topic: %s\n", topic.c_str());
+
+
+							// TODO send the URI data to subscribers 
+							for (const auto sock : client_sockets_)
+							{
+								if (!sock.isPub)
+									continue;
+								
+								if (sock.busy)
+									continue;
+
+								if (sock.topic == topic)
+								{
+									send(sock.s, pub_uri, 6, 0);
+								}
+							}
 						}
-
-						printf("\n");
-
-						uint16_t port_num = (client_sockets_[i].recvbuf[5] << 8) + client_sockets_[i].recvbuf[6];
-						printf("At port number: %u\n", port_num);
 
 						client_sockets_[i].busy = false; 
 						return;
-						//char buf[1] = {0};
-						//client_sockets_[i].sendbuf = buf;
-						//send(client_sockets_[i].s, client_sockets_[i].sendbuf, 1, 0);
 					});
 				
 				continue;
-				printf("hello?");
 			}
 			else if (iResult == 0)
 			{
+
+				// Adjust the routing for new subscribers 
+				if (client_sockets_[i].isPub)
+				{
+					mapped_topics_[client_sockets_[i].topic].first = 0x00; 
+					mapped_topics_[client_sockets_[i].topic].second = 0x00;
+				}
+				
 				printf("closing connection\n");
 				closesocket(client_sockets_[i].s);
 				client_sockets_.erase(client_sockets_.begin() + i);

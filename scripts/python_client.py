@@ -26,14 +26,13 @@ class publisher:
 
         self.__qlen__ = qlen
         self.__pub_sock__ = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.__pub_sock__.bind(('127.0.0.1', 54431))
+        self.__pub_sock__.bind(('127.0.0.1', 0))
         self.__pub_sock__.listen()
 
         self.__MY_URI__ = {
             'HOST': self.__pub_sock__.getsockname()[0],
             'PORT': self.__pub_sock__.getsockname()[1]
             }
-        print(self.__pub_sock__.getsockname()[1])
 
         ## Connections and threading
         self.__done__ = False
@@ -47,15 +46,19 @@ class publisher:
 
     def __setup__(self, HOST, PORT):
         msg = bytearray(__PUB__)
-
+        # "".en
         ## Add HOST addr to the message
         for ip_field in self.__MY_URI__['HOST'].split('.'):
             msg.extend(int(ip_field).to_bytes(1, 'big'))
 
+        
         ## Add PORT addr to the message
-        print(self.__MY_URI__['PORT'])
         msg.extend(self.__MY_URI__['PORT'].to_bytes(2, 'big'))
-
+        
+        print(msg)
+        msg.extend(len(self.topic).to_bytes(1, 'big'))
+        msg.extend(struct.pack(f'{len(self.topic)}s', self.topic.encode('utf-8')))
+        
         ## Create socket to master server
         self.__master_sock__ = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -182,6 +185,7 @@ if __name__ == '__main__':
 
     r = winserver()
     p = r.advertise('/scan', wayside, 1)
+    q = r.advertise('/odom', wayside, 1)
 
     while True:
         p.publish(msg)
