@@ -1,21 +1,11 @@
-from asyncio import QueueEmpty
-import queue
 import socket
 import threading
 import select
-import struct
-import signal
-import sys
 import atexit
-
-from queue import Queue
-from time import sleep
-from tests.wayside_controller import wayside
-
+import struct
 
 __CLOSE_CONN__ = bytes('\x03', 'utf-8')
 __PUB__ = bytes('\x00', 'utf-8')
-__SUB__ = bytes('\x01', 'utf-8')
 
 class publisher:
     def __init__(self, topic, msg_type, qlen):
@@ -45,20 +35,19 @@ class publisher:
         self.__master_sock__ = None
 
     def __setup__(self, HOST, PORT):
+
         msg = bytearray(__PUB__)
-        # "".en
+
         ## Add HOST addr to the message
         for ip_field in self.__MY_URI__['HOST'].split('.'):
             msg.extend(int(ip_field).to_bytes(1, 'big'))
 
-        
+
         ## Add PORT addr to the message
         msg.extend(self.__MY_URI__['PORT'].to_bytes(2, 'big'))
-        
-        print(msg)
         msg.extend(len(self.topic).to_bytes(1, 'big'))
         msg.extend(struct.pack(f'{len(self.topic)}s', self.topic.encode('utf-8')))
-        
+
         ## Create socket to master server
         self.__master_sock__ = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -68,6 +57,7 @@ class publisher:
             print("Err connecting to master! Make sure it's running")
             exit(-1)
 
+        ## Listen for connections in a different thread
         self.__thr__ = threading.Thread(target=self.__connection_loop__, args=(self.__connection_lock__,), daemon=True)
         self.__thr__.start()
 
@@ -78,8 +68,13 @@ class publisher:
             print(f"Err: cannot publish to master server {self.topic}")
 
     def __connection_loop__(self, lock):
+
+        ## Continuously check for new connections
+        ##  until we shut down
         while not self.__done__:
-            readable, writable, exceptional = select.select(self.__inputs__, self.__outputs__, self.__outputs__, 4.0)
+
+            ## Waiting for an event
+            readable, writable, exceptional = select.select(self.__inputs__, self.__outputs__, self.__outputs__)
 
             for s in exceptional:
                 with self.__clients__[s]['lock']:
@@ -107,13 +102,13 @@ class publisher:
             for s in writable:
                 with self.__clients__[s]['lock']:
                     if len(self.__clients__[s]['queue']) > 0:
-                        msg = self.__clients__[s]['queue'].pop(0) 
+                        msg = self.__clients__[s]['queue'].pop(0)
                         print("sending message")
                         try:
                             print(s.send(msg))
                         except:
                             print("Lost connection to client")
-                        
+
                             if s in self.__inputs__:
                                 self.__inputs__.remove(s)
                             if s in self.__outputs__:
@@ -122,10 +117,10 @@ class publisher:
                             s.close()
                             self.__clients__.pop(s)
 
-    
+
     def publish(self, msg):
         __serial_msg__ = msg.serialize()
-        
+
         for i in self.__clients__:
             with self.__clients__[i]['lock']:
                 if len(self.__clients__[i]['queue']) < self.__qlen__:
@@ -155,43 +150,3 @@ class publisher:
         ## Shut down our own socket connection
         self.__pub_sock__.close()
 
-
-class winserver:
-    def __init__(self, HOST = "127.0.0.1", PORT = 27015):
-        ## Default Master URI
-        self.__PORT__ = PORT
-        self.__HOST__ = HOST
-
-    def whoami(self, me):
-        pass
-
-    ## Register a publisher for advertising
-    def advertise(self, topic, msg_type, buff_size):
-        pub = publisher(topic, msg_type, buff_size)
-        pub.__setup__(self.__HOST__, self.__PORT__)
-
-        return pub
-
-def signal_handler(sig, frame):
-    sys.exit(1)
-
-if __name__ == '__main__':
-    signal.signal(signal.SIGINT, signal_handler)
-
-    msg = wayside()
-    msg.my_bools = [True, True, True]
-    msg.my_int = 10
-    msg.my_str = "hello"
-
-    r = winserver()
-    p = r.advertise('/scan', wayside, 1)
-    q = r.advertise('/odom', wayside, 1)
-
-    while True:
-        p.publish(msg)
-        sleep(2.0)
-
-    # sleep(5.0)
-
-        # print("Shutting down subscriber")
-        # p.shutdown()

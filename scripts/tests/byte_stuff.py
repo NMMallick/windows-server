@@ -25,18 +25,18 @@ import struct
 
 #     def changeVars(self, var_name):
 #         self.__dict__[var_name] = 11
-    
+
 
 dic = {
-    "one" : 1, 
-    "two" : 2, 
+    "one" : 1,
+    "two" : 2,
     "n" : None
 }
 
 if __name__ == '__main__':
 
     arr =[]
-    
+
     for i in range(10):
         dic["n"] = i
         arr.append(deepcopy(dic))
