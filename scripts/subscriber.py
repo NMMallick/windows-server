@@ -3,9 +3,7 @@ from copy import deepcopy
 import socket
 import select
 import threading
-from time import sleep
 
-from tests.wayside_controller import wayside
 
 __CLOSE_CONN__ = bytes('\x03', 'utf-8')
 __SUB__ = bytes('\x01', 'utf-8')
@@ -213,10 +211,11 @@ def test(msg):
 
 if __name__ == '__main__':
 
-    s = subscriber('/scan', wayside, test, 1)
-    s.__setup__('127.0.0.1', 27015)
+    # s = subscriber('/scan', wayside, test, 1)
+    # s.__setup__('127.0.0.1', 27015)
 
-    while True:
-        s.__check_queue__()
+    # while True:
+    #     s.__check_queue__()
+    pass
 
 
