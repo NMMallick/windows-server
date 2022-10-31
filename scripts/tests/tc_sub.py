@@ -4,7 +4,7 @@ from winserver import winserver
 
 class TrainControllerSub:
     def __init__(self):
-        self.node = winserver()
+        self.node = winserver("tc_sub")
         self.sub = self.node.subscribe('train_controller', train_controller, self.callback, 1)
 
     def callback(self, msg):

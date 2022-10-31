@@ -11,7 +11,7 @@ class TrainControllerNode:
     def __init__(self):
         atexit.register(self.shutdown)
 
-        self.node = winserver()
+        self.node = winserver("tc_pub")
         self.pub_msg = train_controller()
 
         self.pub = self.node.advertise('train_controller', train_controller, 1)
