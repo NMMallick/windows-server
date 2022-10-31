@@ -1,0 +1,13 @@
+int commandedSpeed
+int suggestedSpeed
+int speedLimit
+int temperature
+bool serviceBrake
+bool eBrake
+bool leftDoor
+bool rightDoor
+bool internalLights
+bool externalLights
+bool announcement
+bool[] authority
+string nextStation

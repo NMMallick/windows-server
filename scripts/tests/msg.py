@@ -28,9 +28,9 @@ datatypes = {
     "int" : {
         "bytes" : 4,
         "format" : 'i'
-    }, 
+    },
     "string" : {
-        "bytes" : None, 
+        "bytes" : None,
         "format" : 's'
     }
 }
@@ -90,9 +90,9 @@ class msg:
             if isArray:
                 dtype = dtype.replace('[]', '')
 
-            __data_byte_length__ = 0 
+            __data_byte_length__ = 0
             if isString:
-                __data_byte_length__ = len(data[i]) 
+                __data_byte_length__ = len(data[i])
             else:
                 __data_byte_length__ = datatypes[dtype]['bytes']
 
@@ -103,10 +103,10 @@ class msg:
             __field_length__ = 0
 
             if isArray:
-                __field_length__ = len(data[i])*__data_byte_length__ 
+                __field_length__ = len(data[i])*__data_byte_length__
             else:
                 __field_length__ = __data_byte_length__
-            
+
             __serialized_data__.extend(struct.pack('>i', __field_length__))
 
             ## Extend the bytearray to hold the actual data
@@ -123,10 +123,10 @@ class msg:
         return self.__serialized_data__
 
     def __deserialize__(self, data, vars):
-        
+
         if len(data) == 0:
             return
-            
+
         __message_length__ = struct.unpack('>i', data[0:4])[0]
         __stamped_message__ = data[4:]
 
@@ -160,7 +160,7 @@ class msg:
             isString = False
             if d == 'string':
                 isString = True
-            
+
             __prim_type__ = datatypes[d]
 
             if isArray:
@@ -190,6 +190,6 @@ if __name__ == '__main__':
     my_bools = [True, False]
 
     m.__serialize__([my_double, my_string, my_int, my_bools])
-    
+
     m.__deserialize__(m.__serialized_data__, [my_double, my_string, my_int, my_bools])
-    
+
