@@ -40,7 +40,7 @@ class msg:
         self.__data_types__ = []
         self.__serialized_data__ = bytearray()
 
-        self.sender = None
+        self.sender = ""
         self.time = None
 
     ## MESSAGE HEADER ##
