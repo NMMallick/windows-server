@@ -165,11 +165,11 @@ class msg:
 
             if isArray:
                 var = []
-                for i in range(int(__field_size__/__prim_type__['bytes'])):
+                for j in range(int(__field_size__/__prim_type__['bytes'])):
                     var.append(struct.unpack('>' + __prim_type__['format'], __data__[0:__prim_type__['bytes']])[0])
                     __data__ = __data__[__prim_type__['bytes']:]
 
-                vars[i] = var
+                vars[j] = var
             else:
                 if isString:
                     var = struct.unpack(f'>{__field_size__}'+__prim_type__['format'], __data__[0:__field_size__])[0]
