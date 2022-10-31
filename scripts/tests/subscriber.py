@@ -192,9 +192,6 @@ class subscriber:
         host = __host__
         port = (res[4] << 8) | res[5]
 
-
-
-
         return (host, port)
 
     def __serialize_request__(self, topic):
