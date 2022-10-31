@@ -38,12 +38,6 @@ class subscriber:
 
         for thr in self.__threads__:
             thr.join()
-        # if self.__pthread__.is_alive():
-        #     self.__stop_pthread__ = True
-        #     self.__pthread__.join()
-
-        # if self.__mthread__.is_alive():
-        #     self.__mthread__.join()
 
     def __setup__(self, HOST, PORT):
 
@@ -55,6 +49,9 @@ class subscriber:
         self.__mthread__.start()
 
     def __supervisor__(self, HOST, PORT):
+
+        if HOST != '127.0.0.1':
+            self.__ext_dev__ = True
 
         ## Connect to master and wait for info on a publisher.
         #   we depend on the master to be ALWAYS running,
@@ -69,7 +66,7 @@ class subscriber:
         __master_sock__.send(__msg__)
 
         __res__ = __master_sock__.recv(512)
-        self.__PUB_URI__ = self.__get_addr__(__res__)
+        self.__PUB_URI__ = self.__get_addr__(__res__, HOST)
         print(self.__PUB_URI__)
 
         ## port number of 0 means no active
@@ -104,7 +101,7 @@ class subscriber:
                         __pthread__.join()
 
                     print("connecting to pub")
-                    
+
                     ## Reconnect to the new pub addr
                     __pthread__ = threading.Thread(target=self.__publisher_conn__, daemon=True)
                     __pthread__.start()
@@ -185,19 +182,23 @@ class subscriber:
             self.__callback__(self.__msg__)
 
 
-    def __get_addr__(self, res):
-        
+    def __get_addr__(self, res, __host__):
+
         if len(res) != 6:
             return
 
         ## Extract the host name and port address
-        host = str(res[0]) + '.' + str(res[1]) + '.' + str(res[2]) + '.' + str(res[3])
+        # host = str(res[0]) + '.' + str(res[1]) + '.' + str(res[2]) + '.' + str(res[3])
+        host = __host__
         port = (res[4] << 8) | res[5]
+
+
+
 
         return (host, port)
 
     def __serialize_request__(self, topic):
-        
+
         msg = bytearray(__SUB__)
         topic_len = len(topic)
         msg += topic_len.to_bytes(1, 'big')

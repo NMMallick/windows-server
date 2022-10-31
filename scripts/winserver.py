@@ -14,6 +14,10 @@ class winserver:
         self.__pubs__ = []
         self.__subs__ = []
         self.__whoami__ = whoami
+
+        self.__ext_dev__ = False
+        if HOST != '127.0.0.1':
+            self.__ext_dev__ = True
         # atexit.register(self.shutdown())
 
     ## Register a publisher for advertising
