@@ -169,7 +169,7 @@ class msg:
                     var.append(struct.unpack('>' + __prim_type__['format'], __data__[0:__prim_type__['bytes']])[0])
                     __data__ = __data__[__prim_type__['bytes']:]
 
-                vars[j] = var
+                vars[i] = var
             else:
                 if isString:
                     var = struct.unpack(f'>{__field_size__}'+__prim_type__['format'], __data__[0:__field_size__])[0]
