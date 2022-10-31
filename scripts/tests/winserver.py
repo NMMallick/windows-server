@@ -25,7 +25,7 @@ class winserver:
     ## Create a subscriber
     def subscribe(self, topic, msg_type, call_back, qlen):
         s = subscriber(topic, msg_type, call_back, qlen)
-        s.__setup__(self.__PORT__, self.__HOST__)
+        s.__setup__(self.__HOST__, self.__PORT__)
         self.__subs__.append(s)
 
         return s
