@@ -16,7 +16,7 @@ class publisher:
 
         self.__qlen__ = qlen
         self.__pub_sock__ = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.__pub_sock__.bind(('127.0.0.1', 0))
+        self.__pub_sock__.bind(('0.0.0.0', 0))
         self.__pub_sock__.listen()
 
         self.__MY_URI__ = {

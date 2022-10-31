@@ -165,7 +165,7 @@ class msg:
 
             if isArray:
                 var = []
-                for j in range(int(__field_size__/__prim_type__['bytes'])):
+                for i in range(int(__field_size__/__prim_type__['bytes'])):
                     var.append(struct.unpack('>' + __prim_type__['format'], __data__[0:__prim_type__['bytes']])[0])
                     __data__ = __data__[__prim_type__['bytes']:]
 

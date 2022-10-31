@@ -5,7 +5,7 @@ from publisher import publisher
 from subscriber import subscriber
 
 class winserver:
-    def __init__(self, HOST = "127.0.0.1", PORT = 27015):
+    def __init__(self, whoami, HOST = "127.0.0.1", PORT = 27015):
 
         ## Default Master URI
         self.__PORT__ = PORT
@@ -13,6 +13,7 @@ class winserver:
 
         self.__pubs__ = []
         self.__subs__ = []
+        self.__whoami__ = whoami
         # atexit.register(self.shutdown())
 
     ## Register a publisher for advertising
@@ -25,7 +26,7 @@ class winserver:
     ## Create a subscriber
     def subscribe(self, topic, msg_type, call_back, qlen):
         s = subscriber(topic, msg_type, call_back, qlen)
-        s.__setup__(self.__HOST__, self.__PORT__)
+        s.__setup__(self.__PORT__, self.__HOST__)
         self.__subs__.append(s)
 
         return s
