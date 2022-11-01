@@ -21,8 +21,8 @@ class winserver:
         # atexit.register(self.shutdown())
 
     ## Register a publisher for advertising
-    def advertise(self, topic, msg_type, buff_size):
-        pub = publisher(topic, msg_type, buff_size)
+    def advertise(self, topic, msg_type, qlen):
+        pub = publisher(topic, msg_type, qlen)
         pub.__setup__(self.__HOST__, self.__PORT__)
         self.__pubs__.append(pub)
         return pub

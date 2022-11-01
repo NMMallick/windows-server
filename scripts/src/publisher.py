@@ -133,7 +133,7 @@ class publisher:
     def shutdown(self):
         print('shutting down')
         self.__done__ = True
-        
+
         ## Wait for thread to finish up
         self.__thr__.join()
 
