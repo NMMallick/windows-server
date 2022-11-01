@@ -24,8 +24,6 @@ class publisher:
             'PORT': self.__pub_sock__.getsockname()[1]
             }
 
-        print(f"publishing on address {self.__MY_URI__['HOST']}, {self.__MY_URI__['PORT']}")
-
         ## Connections and threading
         self.__done__ = False
         self.__connections__ = []
@@ -63,6 +61,7 @@ class publisher:
             exit(-1)
 
         ## Listen for connections in a different thread
+        print(f"publishing on address {self.__MY_URI__['HOST']}, {self.__MY_URI__['PORT']}")
         self.__thr__ = threading.Thread(target=self.__connection_loop__, args=(self.__connection_lock__,), daemon=True)
         self.__thr__.start()
 
