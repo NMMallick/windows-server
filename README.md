@@ -3,8 +3,6 @@ This repository encompasses a publisher/subscriber model that is deployable on a
 
 ## Setup 
 1. Install pip for python libraries and packages
-```
-curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-python get-pip.py
-```
+```curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py```
+```python get-pip.py```
 
