@@ -66,7 +66,7 @@ class subscriber:
         __master_sock__.send(__msg__)
 
         __res__ = __master_sock__.recv(512)
-        self.__PUB_URI__ = self.__get_addr__(__res__, HOST)
+        self.__PUB_URI__ = self.__get_addr__(__res__)
         print(self.__PUB_URI__)
 
         ## port number of 0 means no active
@@ -182,14 +182,16 @@ class subscriber:
             self.__callback__(self.__msg__)
 
 
-    def __get_addr__(self, res, __host__):
+    def __get_addr__(self, res):
 
         if len(res) != 6:
             return
 
         ## Extract the host name and port address
-        # host = str(res[0]) + '.' + str(res[1]) + '.' + str(res[2]) + '.' + str(res[3])
-        host = __host__
+        if self.__ext_dev__:
+            host = str(res[0]) + '.' + str(res[1]) + '.' + str(res[2]) + '.' + str(res[3])
+        else:
+            host = '127.0.0.1'
         port = (res[4] << 8) | res[5]
 
         return (host, port)
