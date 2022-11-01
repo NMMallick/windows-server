@@ -4,9 +4,6 @@ from train_controller import train_controller
 from  winserver import winserver
 import random
 
-
-
-
 class TrainControllerNode:
     def __init__(self):
         atexit.register(self.shutdown)

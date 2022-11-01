@@ -1,9 +1,4 @@
-import math
-from posixpath import abspath
-import struct
 import os
-import struct
-import math
 import argparse
 
 
@@ -70,8 +65,9 @@ def getVars(msgName, input, output):
                 type_var = line.split(' ')
                 vars.append((type_var[0], type_var[1]))
 
-                ## Verify that the .msg file is well formated s
+                ## Verify that the .msg file is well formated 
                 if len(type_var) != 2:
+                    print(type_var)
                     print(f'Err: invalid message type in file {msg_file}')
                     exit(-1)
 
