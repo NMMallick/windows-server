@@ -13,4 +13,4 @@ py -m pip install -e <path/to/repository>/scripts
 ```
 
 ## Examples for creating Publishers and Subscribers
-Examples on creating publisher and subscriber nodes can be found [here] (https://github.com/NMMallick/windows-server/tree/main/scripts/examples). You'll find another README.md on how to generate message classes to send custom messages over the server
+Examples on creating publisher and subscriber nodes can be found [here](https://github.com/NMMallick/windows-server/tree/main/scripts/examples). You'll find another README.md on how to generate message classes to send custom messages over the server
