@@ -8,8 +8,8 @@ class winserver:
     def __init__(self, whoami, HOST = "127.0.0.1", PORT = 27015):
 
         ## Default Master URI
-        self.__PORT__ = PORT
         self.__HOST__ = HOST
+        self.__PORT__ = PORT
 
         self.__pubs__ = []
         self.__subs__ = []
@@ -21,8 +21,12 @@ class winserver:
         # atexit.register(self.shutdown())
 
     ## Register a publisher for advertising
-    def advertise(self, topic, msg_type, qlen):
+    def advertise(self, topic, msg_type, qlen, __HOST__=None):
         pub = publisher(topic, msg_type, qlen)
+
+        if __HOST__ != None:
+            pub.__set_host__(__HOST__)
+
         pub.__setup__(self.__HOST__, self.__PORT__)
         self.__pubs__.append(pub)
         return pub

@@ -36,6 +36,9 @@ class publisher:
         self.__clients__ = {}
         self.__master_sock__ = None
 
+    def __set_host__(self, HOST):
+        self.__MY_URI__['HOST'] = HOST
+
     def __setup__(self, HOST, PORT):
 
         msg = bytearray(__PUB__)
