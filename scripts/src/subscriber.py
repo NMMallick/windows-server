@@ -192,6 +192,7 @@ class subscriber:
         if self.__ext_dev__:
             host = str(res[0]) + '.' + str(res[1]) + '.' + str(res[2]) + '.' + str(res[3])
         else:
+            print('else is being called')
             host = '127.0.0.1'
         port = (res[4] << 8) | res[5]
 
