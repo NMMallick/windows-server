@@ -50,10 +50,6 @@ class subscriber:
         self.__mthread__.start()
 
     def __supervisor__(self, HOST, PORT):
-
-        if HOST != '127.0.0.1':
-            self.__ext_dev__ = True
-
         ## Connect to master and wait for info on a publisher.
         #   we depend on the master to be ALWAYS running,
         #   so if it shuts down, so do we
@@ -189,11 +185,12 @@ class subscriber:
             return
 
         ## Extract the host name and port address
-        if self.__ext_dev__:
-            host = str(res[0]) + '.' + str(res[1]) + '.' + str(res[2]) + '.' + str(res[3])
-        else:
-            print('else is being called')
+
+        host = str(res[0]) + '.' + str(res[1]) + '.' + str(res[2]) + '.' + str(res[3])
+
+        if host == '0.0.0.0':
             host = '127.0.0.1'
+
         port = (res[4] << 8) | res[5]
 
         return (host, port)
