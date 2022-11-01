@@ -25,8 +25,9 @@ class subscriber:
 
         # self.__pthread__ = None
         self.__mthread__ = None
-
         self.__threads__ = []
+
+        self.__ext_dev__ = False
 
         ## No active publisher identity
         self.__PUB_URI__ = ('0.0.0.0', 0x0000)

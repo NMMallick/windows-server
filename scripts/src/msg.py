@@ -88,6 +88,7 @@ class msg:
             isString = True if 'string' in dtype else False
 
             print(f"Datatype {dtype}, index {i}")
+            print("Data i: ", data[i])
 
             if isArray:
                 dtype = dtype.replace('[]', '')
