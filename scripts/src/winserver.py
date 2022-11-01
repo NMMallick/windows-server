@@ -25,8 +25,8 @@ class winserver:
         pub = publisher(topic, msg_type, qlen)
 
         if __HOST__ != None:
+            ## Set the host name where the node will be advertising
             pub.__set_host__(__HOST__)
-
         pub.__setup__(self.__HOST__, self.__PORT__)
         self.__pubs__.append(pub)
         return pub
@@ -36,7 +36,6 @@ class winserver:
         s = subscriber(topic, msg_type, call_back, qlen)
         s.__setup__(self.__HOST__, self.__PORT__)
         self.__subs__.append(s)
-
         return s
 
     def spin(self):
