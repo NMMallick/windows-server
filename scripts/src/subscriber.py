@@ -45,6 +45,7 @@ class subscriber:
         ## Thread for listen to the main
         #   server
         self.__stop_pthread__ = False
+        self.__MASTER_URI__ = (HOST, PORT)
         self.__mthread__ = threading.Thread(target=self.__supervisor__, args=(HOST, PORT,), daemon=True)
 
         self.__mthread__.start()
@@ -64,7 +65,6 @@ class subscriber:
 
         __res__ = __master_sock__.recv(512)
         self.__PUB_URI__ = self.__get_addr__(__res__)
-        print(self.__PUB_URI__)
 
         ## port number of 0 means no active
         #   publisher within this context
@@ -90,14 +90,12 @@ class subscriber:
                     self.shutdown()
 
                 self.__PUB_URI__ = self.__get_addr__(__data__)
-
+                print(self.__PUB_URI__)
                 if self.__PUB_URI__[1] != 0:
                     ## End the current publisher connections
                     if __pthread__.is_alive():
                         self.__stop_pthread__ = True
                         __pthread__.join()
-
-                    print("connecting to pub")
 
                     ## Reconnect to the new pub addr
                     __pthread__ = threading.Thread(target=self.__publisher_conn__, daemon=True)
@@ -188,7 +186,9 @@ class subscriber:
 
         host = str(res[0]) + '.' + str(res[1]) + '.' + str(res[2]) + '.' + str(res[3])
 
-        if host == '0.0.0.0':
+        if host == '0.0.0.0' and self.__ext_dev__:
+            host = self.__MASTER_URI__[0]
+        elif host == '0.0.0.0':
             host = '127.0.0.1'
 
         port = (res[4] << 8) | res[5]

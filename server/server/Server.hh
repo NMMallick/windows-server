@@ -206,7 +206,7 @@ void Server::CheckClients()
 								pub_uri[4] = (mapped_topics_[topic].second >> 8) & 0xff; 
 
 								// Host
-								pub_uri[3] = mapped_topics_[topic].first & 0x11; 
+								pub_uri[3] = mapped_topics_[topic].first & 0xff; 
 								pub_uri[2] = (mapped_topics_[topic].first >> 8) & 0xff;
 								pub_uri[1] = (mapped_topics_[topic].first >> 16) & 0xff;
 								pub_uri[0] = (mapped_topics_[topic].first >> 24) & 0xff;							
@@ -232,10 +232,10 @@ void Server::CheckClients()
 
 							for (size_t k = 1; k <= 4; ++k)
 							{
-								if (k != 4) printf("%d.", client_sockets_[i].recvbuf[k]);
-								else printf("%u", client_sockets_[i].recvbuf[k]);
-								pub_uri[k - 1] = client_sockets_[i].recvbuf[k];
-								hostname = (hostname << 8) | client_sockets_[i].recvbuf[k];
+								if (k != 4) printf("%u.", client_sockets_[i].recvbuf[k] & 0xff);
+								else printf("%u", client_sockets_[i].recvbuf[k] & 0xff);
+								pub_uri[k - 1] = client_sockets_[i].recvbuf[k] & 0xff;
+								hostname = (hostname << 8) | (client_sockets_[i].recvbuf[k] & 0xff);
 							}
 
 							pub_uri[4] = (client_sockets_[i].recvbuf[5] & 0xff);
