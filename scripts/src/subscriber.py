@@ -46,7 +46,7 @@ class subscriber:
         #   device
         if HOST != '127.0.0.1':
             self.__ext_dev__ = True
-            
+
         ## Thread for listen to the main
         #   server
         self.__stop_pthread__ = False
@@ -188,9 +188,8 @@ class subscriber:
             return
 
         ## Extract the host name and port address
-
         host = str(res[0]) + '.' + str(res[1]) + '.' + str(res[2]) + '.' + str(res[3])
-        print(host)
+        
         if (host == '0.0.0.0' or host == '127.0.0.1') and self.__ext_dev__:
             host = self.__MASTER_URI__[0]
         elif host == '0.0.0.0':
@@ -215,11 +214,6 @@ def test(msg):
 
 if __name__ == '__main__':
 
-    # s = subscriber('/scan', wayside, test, 1)
-    # s.__setup__('127.0.0.1', 27015)
-
-    # while True:
-    #     s.__check_queue__()
     pass
 
 
