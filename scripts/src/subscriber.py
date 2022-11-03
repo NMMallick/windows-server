@@ -178,14 +178,14 @@ class subscriber:
 
 
     def __get_addr__(self, res):
-        print('yo')
+        
         if len(res) != 6:
             return
 
         ## Extract the host name and port address
 
         host = str(res[0]) + '.' + str(res[1]) + '.' + str(res[2]) + '.' + str(res[3])
-
+        print(host)
         if (host == '0.0.0.0' or host == '127.0.0.1') and self.__ext_dev__:
             host = self.__MASTER_URI__[0]
         elif host == '0.0.0.0':
