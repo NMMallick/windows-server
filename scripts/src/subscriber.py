@@ -186,7 +186,7 @@ class subscriber:
 
         host = str(res[0]) + '.' + str(res[1]) + '.' + str(res[2]) + '.' + str(res[3])
 
-        if host == '0.0.0.0' and self.__ext_dev__:
+        if (host == '0.0.0.0' or host == '127.0.0.1') and self.__ext_dev__:
             host = self.__MASTER_URI__[0]
         elif host == '0.0.0.0':
             host = '127.0.0.1'
