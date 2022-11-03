@@ -178,7 +178,7 @@ class subscriber:
 
 
     def __get_addr__(self, res):
-
+        print('yo')
         if len(res) != 6:
             return
 
