@@ -19,7 +19,7 @@
 struct client_
 {
 	SOCKET s = NULL;
-	int buflen = DEFAULT_BUFLEN; 
+	int buflen = DEFAULT_BUFLEN;
 	char recvbuf[DEFAULT_BUFLEN];
 	char* sendbuf;
 	bool busy;
@@ -41,7 +41,7 @@ private:
 	TaskPool server_threads_;
 
 	struct addrinfo *result = NULL;
-	struct addrinfo hints; 
+	struct addrinfo hints;
 
 	bool done_;
 
@@ -56,7 +56,7 @@ public:
 	void AcceptConnections();
 	void CheckClients();
 	void ShutDown();
-	
+
 };
 
 Server::Server(const std::string &PORT_ADDR = "4000")
@@ -71,13 +71,13 @@ Server::Server(const std::string &PORT_ADDR = "4000")
 		printf("WSAStartup failed with error: %d\n", iResult);
 		exit(1);
 	}
-	
+
 	ZeroMemory(&hints, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 	hints.ai_flags = AI_PASSIVE;
-	
+
 	std::string HOST = "0.0.0.0";
 
 	// Resolve the server address and port
@@ -142,13 +142,13 @@ void Server::AcceptConnections()
 			}
 
 			//this->client_sockets_.push_back(c);
-			c.busy = false; 
+			c.busy = false;
 			std::unique_lock<std::mutex> lock(socket_mutex_);
 			client_sockets_.push_back(c);
 
 			printf("accepted client (id=%d)\n", this->client_sockets_.size()-1);
 		}
-		 
+
 		closesocket(this->ListenSocket);
 		return;
 	});
@@ -169,60 +169,60 @@ void Server::CheckClients()
 
 			ioctlsocket(client_sockets_[i].s, FIONBIO, &ul);
 			auto iResult = recv(client_sockets_[i].s, client_sockets_[i].recvbuf, DEFAULT_BUFLEN, 0);
-			
-			if (iResult > 0) // Got a message 
+
+			if (iResult > 0) // Got a message
 			{
 				// Record the byte size of data that's in the queue
 				client_sockets_[i].busy = true;
 				client_sockets_[i].buflen = iResult;
 
-				// Have a thread deal with recieving that data 
+				// Have a thread deal with recieving that data
 				server_threads_.launch([&, i]() {
 						std::unique_lock<std::mutex> lock(socket_mutex_);
-				
+
 						printf("Bytes received from client(%d) : %d\n", i, client_sockets_[i].buflen);
-						
+
 						// Register subscriber
 						if (client_sockets_[i].recvbuf[0] == 0x01)
 						{
-							uint8_t topic_len = client_sockets_[i].recvbuf[1]; 
-							client_sockets_[i].isPub = false; 
+							uint8_t topic_len = client_sockets_[i].recvbuf[1];
+							client_sockets_[i].isPub = false;
 
 							// Extract topic from the buffer
 							std::string topic;
 							for (size_t k = 2; k < topic_len+2; k++)
 								topic.push_back(client_sockets_[i].recvbuf[k]);
-							
+
 							printf("Node requesting subscription to topic (%s)\n", topic.c_str());
 							client_sockets_[i].topic = topic;
 
-							// Send URI info to the client  
+							// Send URI info to the client
 							char pub_uri[6];
 
-							if (mapped_topics_.count(topic)) // If there exists a publisher 
+							if (mapped_topics_.count(topic)) // If there exists a publisher
 							{
 								// Port Number
-								pub_uri[5] = mapped_topics_[topic].second & 0xff; 
-								pub_uri[4] = (mapped_topics_[topic].second >> 8) & 0xff; 
+								pub_uri[5] = mapped_topics_[topic].second & 0xff;
+								pub_uri[4] = (mapped_topics_[topic].second >> 8) & 0xff;
 
 								// Host
-								pub_uri[3] = mapped_topics_[topic].first & 0xff; 
+								pub_uri[3] = mapped_topics_[topic].first & 0xff;
 								pub_uri[2] = (mapped_topics_[topic].first >> 8) & 0xff;
 								pub_uri[1] = (mapped_topics_[topic].first >> 16) & 0xff;
-								pub_uri[0] = (mapped_topics_[topic].first >> 24) & 0xff;							
+								pub_uri[0] = (mapped_topics_[topic].first >> 24) & 0xff;
 							}
-							else // Notify no active publisher 
+							else // Notify no active publisher
 							{
 								for (size_t i = 0; i < 6; i++)
 								{
-									pub_uri[i] = 0x00; 
+									pub_uri[i] = 0x00;
 								}
 							}
 
 							send(client_sockets_[i].s, pub_uri, 6, 0);
-							
+
 						}
-						
+
 						// Register Publisher
 						if (client_sockets_[i].recvbuf[0] == 0x00)
 						{
@@ -255,17 +255,17 @@ void Server::CheckClients()
 							for (size_t k = 8; k < topic_len + 8; k++)
 								topic.push_back(client_sockets_[i].recvbuf[k]);
 
-							// Register the route 
+							// Register the route
 							mapped_topics_[topic] = std::make_pair(hostname, port_num);
 
-							// Register as a publisher and save its topic 
+							// Register as a publisher and save its topic
 							client_sockets_[i].isPub = true;
 							client_sockets_[i].topic = topic;
 
 							printf("Topic: %s\n", topic.c_str());
 
 
-							// TODO send the URI data to subscribers 
+							// TODO send the URI data to subscribers
 							for (auto sock : client_sockets_)
 							{
 								if (sock.isPub)
@@ -284,22 +284,22 @@ void Server::CheckClients()
 							}
 						}
 
-						client_sockets_[i].busy = false; 
+						client_sockets_[i].busy = false;
 						return;
 					});
-				
+
 				continue;
 			}
 			else if (iResult == 0)
 			{
 
-				// Adjust the routing for new subscribers 
+				// Adjust the routing for new subscribers
 				if (client_sockets_[i].isPub)
 				{
-					mapped_topics_[client_sockets_[i].topic].first = 0x00; 
+					mapped_topics_[client_sockets_[i].topic].first = 0x00;
 					mapped_topics_[client_sockets_[i].topic].second = 0x00;
 				}
-				
+
 				printf("closing connection\n");
 				closesocket(client_sockets_[i].s);
 				client_sockets_.erase(client_sockets_.begin() + i);
@@ -328,7 +328,7 @@ void Server::ShutDown()
 	printf("closing socket connections\n");
 	for (size_t i = 0; i < client_sockets_.size(); i++)
 		closesocket(client_sockets_[i].s);
-	
+
 	client_sockets_.clear();
 
 	printf("shutting down server connections\n");

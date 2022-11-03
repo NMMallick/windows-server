@@ -65,7 +65,7 @@ def getVars(msgName, input, output):
                 type_var = line.split(' ')
                 vars.append((type_var[0], type_var[1]))
 
-                ## Verify that the .msg file is well formated 
+                ## Verify that the .msg file is well formated
                 if len(type_var) != 2:
                     print(type_var)
                     print(f'Err: invalid message type in file {msg_file}')
@@ -73,7 +73,12 @@ def getVars(msgName, input, output):
 
             ## Generate the file and create the class header
             if len(vars) > 0:
-                file = open(f"{out_dir}/{msgName}.py", 'w')
+
+                if not os.path.exists(f"{out_dir}/{msgName}"):
+                    os.mkdir(f"{out_dir}/{msgName}")
+
+                __outdir__ = out_dir + '/' + msgName
+                file = open(f"{__outdir__}/{msg_file.replace('.msg', '')}.py", 'w')
                 generateImports(file)
                 generateClassHeader(file, msg_file.split('.msg')[0])
                 generateClassVariables(file, vars)
