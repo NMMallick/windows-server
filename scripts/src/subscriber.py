@@ -42,6 +42,11 @@ class subscriber:
 
     def __setup__(self, HOST, PORT):
 
+        ## Check wether we are an external
+        #   device
+        if HOST != '127.0.0.1':
+            self.__ext_dev__ = True
+            
         ## Thread for listen to the main
         #   server
         self.__stop_pthread__ = False
