@@ -179,8 +179,6 @@ class msg:
                     vars[i] = var.decode('utf-8')
                     __data__ = __data__[__field_size__:]
                 else:
-                    print(f"Hung on datatype {d}")
-                    print(f"index {i}")
                     var = struct.unpack('>'+__prim_type__['format'], __data__[0:__field_size__])[0]
                     vars[i] = var
                     __data__ = __data__[__field_size__:]
