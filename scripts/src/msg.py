@@ -195,4 +195,3 @@ if __name__ == '__main__':
     m.__serialize__([my_double, my_string, my_int, my_bools])
 
     m.__deserialize__(m.__serialized_data__, [my_double, my_string, my_int, my_bools])
-
